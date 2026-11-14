@@ -43,5 +43,74 @@ public class MainActivity extends Activity {
     void report(){shell("Laporan bulanan");double in=db.total("IN",month()),out=db.total("OUT",month());card(month());card("Pemasukan: Rp"+money(in));card("Pengeluaran: Rp"+money(out));card("Selisih: Rp"+money(in-out));card("Grafik perbandingan");bar("Pemasukan",in,green);bar("Pengeluaran",out,red);}
     void bar(String label,double val,int color){LinearLayout r=new LinearLayout(this);r.setOrientation(1);r.addView(text(label+" · Rp"+money(val),14,white));View v=new View(this);v.setBackgroundColor(color);int width=(int)(getResources().getDisplayMetrics().widthPixels*.75*Math.min(1,val/Math.max(1,Math.max(db.total("IN",month()),db.total("OUT",month())))));r.addView(v,new LinearLayout.LayoutParams(Math.max(dp(4),width),dp(12)));content.addView(r);}
     void profile(){shell("Profil");card("MoneyTrack\nPengelola keuangan pribadi");Button cats=button("Kelola kategori");content.addView(cats);cats.setOnClickListener(v->categories());Button rem=button("Pengaturan notifikasi");content.addView(rem);rem.setOnClickListener(v->reminder());Button hist=button("Riwayat transaksi");content.addView(hist);hist.setOnClickListener(v->history());card("MoneyTrack · Android 10+");}
-    void reminder(){shell("Pengingat harian");SharedPreferences p=getSharedPreferences(Reminder.PREF,0);Switch sw=new Switch(this);sw.setText("Aktifkan pengingat harian");sw.setTextColor(white);sw.setChecked(p.getBoolean("enabled",false));content.addView(sw);TimePicker tp=new TimePicker(this);tp.setIs24HourView(true);tp.setHour(p.getInt("hour",20));tp.setMinute(p.getInt("minute",0));content.addView(tp);Button save=button("Simpan jadwal pengingat");content.addView(save);save.setOnClickListener(v->{boolean enabled=sw.isChecked();p.edit().putBoolean("enabled",enabled).putInt("hour",tp.getHour()).putInt("minute",tp.getMinute()).apply();if(enabled){askNotif();Reminder.schedule(this);if(Build.VERSION.SDK_INT>=31){AlarmManager am=(AlarmManager)getSystemService(ALARM_SERVICE);if(am!=null&&!am.canScheduleExactAlarms()){new AlertDialog.Builder(this).setTitle("Izinkan alarm tepat waktu").setMessage("Agar pengingat lebih tepat sesuai jam pilihan, izinkan MoneyTrack menjadwalkan alarm di halaman pengaturan Android. Jika dilewati, notifikasi tetap dijadwalkan tetapi bisa terlambat.").setNegativeButton("Nanti",(d,w)->{}).setPositiveButton("Buka pengaturan",(d,w)->{try{Intent it=new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:"+getPackageName()));startActivity(it);}catch(Exception ex){}}).show();return;}}else{Reminder.cancel(this);}new AlertDialog.Builder(this).setMessage(enabled?"Jadwal disimpan. Pastikan izin notifikasi aktif.":"Pengingat dinonaktifkan.").setPositiveButton("OK",null).show();});card("Notifikasi harian\nUang keluar hari ini + total pengeluaran hari ini\nkalo masi miskin jangan boros deh");if(Build.VERSION.SDK_INT>=31){AlarmManager am=(AlarmManager)getSystemService(ALARM_SERVICE);card("Izin alarm tepat waktu: "+(am!=null&&am.canScheduleExactAlarms()?"Aktif":"Belum aktif"));}NotificationManager nm=(NotificationManager)getSystemService(NOTIFICATION_SERVICE);card("Izin notifikasi: "+(nm!=null&&nm.areNotificationsEnabled()?"Aktif":"Perlu diaktifkan di Pengaturan Android"));}
+    void reminder(){
+    shell("Pengingat harian");
+    SharedPreferences p=getSharedPreferences(Reminder.PREF,0);
+
+    Switch sw=new Switch(this);
+    sw.setText("Aktifkan pengingat harian");
+    sw.setTextColor(white);
+    sw.setChecked(p.getBoolean("enabled",false));
+    content.addView(sw);
+
+    TimePicker tp=new TimePicker(this);
+    tp.setIs24HourView(true);
+    tp.setHour(p.getInt("hour",20));
+    tp.setMinute(p.getInt("minute",0));
+    content.addView(tp);
+
+    Button save=button("Simpan jadwal pengingat");
+    content.addView(save);
+
+    save.setOnClickListener(v->{
+        boolean enabled=sw.isChecked();
+        p.edit()
+            .putBoolean("enabled",enabled)
+            .putInt("hour",tp.getHour())
+            .putInt("minute",tp.getMinute())
+            .apply();
+
+        if(enabled){
+            askNotif();
+            Reminder.schedule(this);
+
+            if(Build.VERSION.SDK_INT>=31){
+                AlarmManager am=(AlarmManager)getSystemService(ALARM_SERVICE);
+                if(am!=null&&!am.canScheduleExactAlarms()){
+                    new AlertDialog.Builder(this)
+                        .setTitle("Izinkan alarm tepat waktu")
+                        .setMessage("Agar pengingat lebih tepat sesuai jam pilihan, izinkan MoneyTrack menjadwalkan alarm di halaman pengaturan Android.\nJika dilewati, notifikasi tetap dijadwalkan tetapi bisa terlambat.")
+                        .setNegativeButton("Nanti",(d,w)->{})
+                        .setPositiveButton("Buka pengaturan",(d,w)->{
+                            try{
+                                Intent it=new Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM,
+                                    Uri.parse("package:"+getPackageName()));
+                                startActivity(it);
+                            }catch(Exception ex){}
+                        }).show();
+                    return;
+                }
+            }
+        }else{
+            Reminder.cancel(this);
+        }
+
+        new AlertDialog.Builder(this)
+            .setMessage(enabled?"Jadwal disimpan.\nPastikan izin notifikasi aktif.":"Pengingat dinonaktifkan.")
+            .setPositiveButton("OK",null).show();
+    });
+
+    card("Notifikasi harian\nUang keluar hari ini + total pengeluaran hari ini\nkalo masi miskin jangan boros deh");
+
+    if(Build.VERSION.SDK_INT>=31){
+        AlarmManager am=(AlarmManager)getSystemService(ALARM_SERVICE);
+        card("Izin alarm tepat waktu: "+
+            (am!=null&&am.canScheduleExactAlarms()?"Aktif":"Belum aktif"));
+    }
+
+    NotificationManager nm=(NotificationManager)getSystemService(NOTIFICATION_SERVICE);
+    card("Izin notifikasi: "+
+        (nm!=null&&nm.areNotificationsEnabled()?"Aktif":"Perlu diaktifkan di Pengaturan Android"));
+}
+
 }
