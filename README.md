@@ -36,3 +36,15 @@ Cara termudah adalah memakai GitHub Actions sebagai komputer build di cloud:
 6. Ekstrak ZIP artifact, lalu buka `app-debug.apk` di HP dan izinkan instalasi dari sumber tersebut jika Android meminta.
 
 Build berjalan di server GitHub; HP hanya dipakai untuk upload source, menjalankan workflow, dan mengunduh APK. Ini membutuhkan internet dan akun GitHub. Jangan unggah password, API key, atau data keuangan pribadi ke repository.
+
+## MoneyTrack UI + reminder update
+
+- Minimum supported Android version: Android 10 (API 29).
+- Dashboard uses a dark background, green balance card, income/expense summaries, recent transactions, and four bottom navigation destinations.
+- Daily reminder uses the selected local device time and automatically schedules the next day after delivery.
+- On Android 13 and newer, allow notification permission when prompted.
+- On Android 12 and newer, allow **Alarms & reminders** / exact-alarm access when prompted for the most punctual delivery. If this access is not granted, Android receives an inexact fallback alarm and may delay delivery.
+- The reminder is restored after reboot and rescheduled after device time/time-zone changes or exact-alarm access changes.
+- Check Android Settings > Apps > MoneyTrack > Notifications if reminders are still not visible. Also check that the app's notification channel is enabled and that battery restrictions are not aggressively limiting the app.
+
+Build from GitHub Actions using the existing `Build MoneyTrack APK` workflow. This source update has not been compiled on-device in this environment; install and test the generated APK before relying on scheduled reminders.
